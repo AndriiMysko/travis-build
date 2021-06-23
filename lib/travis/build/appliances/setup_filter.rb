@@ -69,7 +69,7 @@ module Travis
 
         def apply
           info :filter, strategy, data.repository[:slug].to_s, data.job[:id], data.job[:number]
-          puts code
+          puts code if ENV['ROLLOUT_DEBUG']
           sh.raw code.output_safe
         end
 
@@ -102,7 +102,6 @@ module Travis
           def exports
             values = secrets.map { |value| Shellwords.escape(value) }
             values = values.map.with_index { |value, ix| "export SECRET_#{ix}=#{quotize_env(value)}" }
-            Travis::Build.logger.info(values)
             values.join(' ')
           end
 
@@ -122,19 +121,18 @@ module Travis
             Travis::Build.logger.info(MSGS[msg] % args)
           end
 
-          def quotize_env(val)
-            if val.include?('=')
-              var = val.split('=').first
-              value = val.split('=', 2).last
+          def quotize_env(value)
+            if value.include?('=')
+              var_name = "#{value.split('=').first}="
+              value = value.split('=', 2).last
             else
-              var = ''
-              value = val
+              var_name = ''
             end
 
             if (value[0] == '"' && value[-1] == '"') || (value[0] == "'" && value[-1] == "'")
-              "#{var}#{var.empty? ? '' : '='}#{value}"
+              "#{var_name}#{value}"
             else
-              "#{var}#{var.empty? ? '' : '='}'#{value}'"
+              "#{var_name}'#{value}'"
             end
           end
       end
