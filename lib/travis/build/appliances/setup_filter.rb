@@ -69,7 +69,7 @@ module Travis
 
         def apply
           info :filter, strategy, data.repository[:slug].to_s, data.job[:id], data.job[:number]
-          puts code if ENV['ROLLOUT_DEBUG']
+          puts code
           sh.raw code.output_safe
         end
 
@@ -102,6 +102,7 @@ module Travis
           def exports
             values = secrets.map { |value| Shellwords.escape(value) }
             values = values.map.with_index { |value, ix| "export SECRET_#{ix}=#{value}" }
+            Travis::Build.logger.info(values)
             values.join(' ')
           end
 
